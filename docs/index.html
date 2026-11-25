@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alma · versiones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--fondo:#101214;--panel:#1C1F23;--linea:#2A2E33;--texto:#EDEDED;--texto2:#9AA0A6;--acento:#7CF2C0;--acento-t:#0B1A14}
+body.claro{--fondo:#F7F8F9;--panel:#FFFFFF;--linea:#DADDE0;--texto:#15171A;--texto2:#5F6368;--acento:#12B886;--acento-t:#FFFFFF}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--texto);font-family:Inter,system-ui,sans-serif;line-height:1.5}
+main{max-width:760px;margin:0 auto;padding:56px 24px 80px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{font-size:72px;font-weight:800;letter-spacing:-2px;margin:0;line-height:1}
+.sub{color:var(--texto2);margin:8px 0 32px}
+.modo{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--panel);border:1px solid var(--linea)}
+.modo button{font:inherit;font-size:13px;border:0;border-radius:999px;padding:6px 12px;background:transparent;color:var(--texto2);cursor:pointer}
+.modo button[aria-pressed=true]{background:var(--texto);color:var(--fondo)}
+.bajar{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:10px;background:var(--acento);color:var(--acento-t);font-weight:600;text-decoration:none}
+.bajar:focus-visible,.modo button:focus-visible{outline:2px solid var(--texto);outline-offset:2px}
+.nota{color:var(--texto2);font-size:14px;margin:12px 0 48px}
+h2{font-size:14px;font-weight:600;color:var(--texto2);margin:0 0 12px}
+.version{background:var(--panel);border:1px solid var(--linea);border-radius:14px;padding:18px 20px;margin-bottom:12px}
+.version h3{margin:0;font-size:18px;display:flex;gap:10px;align-items:baseline}
+.version h3 small{font-size:13px;font-weight:400;color:var(--texto2)}
+.version .cuerpo{white-space:pre-wrap;color:var(--texto);font-size:15px;margin-top:8px}
+.etq{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--acento);color:var(--acento-t)}
+footer{margin-top:48px;color:var(--texto2);font-size:13px}
+a{color:var(--acento)}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>alma</h1>
+<div class="modo" role="group" aria-label="Modo de color">
+<button type="button" data-modo="oscuro">● Oscuro</button>
+<button type="button" data-modo="claro">○ Claro</button>
+</div>
+</header>
+<p class="sub">Juego de construcción y supervivencia. Nombre tomado del observatorio ALMA, en el norte de Chile.</p>
+<a class="bajar" id="bajar" href="https://github.com/VARUZZZ/ALMA/releases/latest">Descargar la última versión</a>
+<p class="nota">Descomprime la carpeta y abre <b>Alma.exe</b>. No se instala nada: cuando hay una versión nueva, el juego se actualiza solo al abrirlo.
+Si Windows muestra “Windows protegió su PC”, toca <i>Más información → Ejecutar de todas formas</i>.</p>
+<h2>Novedades</h2>
+<div id="lista"><p class="nota">Cargando versiones…</p></div>
+<footer>Hecho por Pedro · <a href="https://github.com/VARUZZZ/ALMA/releases">todas las versiones</a></footer>
+</main>
+<script>
+const botones=document.querySelectorAll('.modo button');
+function modo(m){document.body.classList.toggle('claro',m==='claro');botones.forEach(b=>b.setAttribute('aria-pressed',b.dataset.modo===m));try{localStorage.setItem('alma_modo',m)}catch(e){}}
+botones.forEach(b=>b.onclick=()=>modo(b.dataset.modo));
+let guardado='oscuro';try{guardado=localStorage.getItem('alma_modo')||'oscuro'}catch(e){}
+modo(guardado);
+fetch('https://api.github.com/repos/VARUZZZ/ALMA/releases?per_page=30').then(r=>r.json()).then(rs=>{
+  const lista=document.getElementById('lista');lista.innerHTML='';
+  if(!Array.isArray(rs)||!rs.length){lista.innerHTML='<p class="nota">Todavía no hay versiones publicadas.</p>';return}
+  rs.forEach((r,i)=>{
+    const zip=(r.assets||[]).find(a=>a.name.endsWith('.zip'));
+    if(i===0&&zip)document.getElementById('bajar').href=zip.browser_download_url;
+    const d=document.createElement('article');d.className='version';
+    const h=document.createElement('h3');h.textContent=r.name||r.tag_name;
+    const f=document.createElement('small');f.textContent=new Date(r.published_at).toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'});
+    h.appendChild(f);
+    if(i===0){const e=document.createElement('span');e.className='etq';e.textContent='última';h.appendChild(e)}
+    const c=document.createElement('div');c.className='cuerpo';c.textContent=r.body||'';
+    d.appendChild(h);d.appendChild(c);lista.appendChild(d);
+  });
+}).catch(()=>{document.getElementById('lista').innerHTML='<p class="nota">No se pudo cargar la lista. Míralas en GitHub.</p>'});
+</script>
+</body>
+</html>
